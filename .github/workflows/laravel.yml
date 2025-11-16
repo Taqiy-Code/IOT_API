@@ -1,0 +1,65 @@
+name: Laravel CI/CD (no tests)
+
+on:
+  push:
+    branches: [ "main" ]        # ganti kalau pakai branch lain
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build & Prepare Laravel
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'     # sesuaikan dengan versi PHP project-mu
+          extensions: mbstring, intl, bcmath
+          coverage: none
+
+      - name: Install Composer dependencies (no dev)
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+      # Kalau di CI butuh .env, boleh aktifkan ini, kalau tidak perlu bisa dihapus
+      - name: Copy .env
+        run: |
+          if [ ! -f .env ]; then
+            cp .env.example .env
+          fi
+
+      - name: Generate application key
+        run: php artisan key:generate --force
+
+      - name: Optimize Laravel
+        run: |
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+  deploy:
+    name: Deploy to Production Server
+    needs: build                 # jalan setelah job build sukses
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'   # hanya kalau push ke main
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}        # set di repo Settings -> Secrets
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}  # private key untuk ssh
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd /iot-api.belajarkoding.my.id/laravel_login_api           # ganti dengan path project di server
+            git pull origin main              # update source code
+            composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+            php artisan migrate --force       # kalau tidak mau auto migrate, hapus baris ini
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache

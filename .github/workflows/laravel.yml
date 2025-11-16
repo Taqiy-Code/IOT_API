@@ -55,6 +55,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}  # private key untuk ssh
           port: ${{ secrets.SSH_PORT }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             cd /iot-api.belajarkoding.my.id/laravel_login_api           # ganti dengan path project di server
             git pull origin main              # update source code

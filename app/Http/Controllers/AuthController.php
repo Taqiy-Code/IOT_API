@@ -12,7 +12,7 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        
+
         try {
             $request->validate([
                 'name' => 'required|string|max:255',
@@ -23,9 +23,9 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Validation error',
                 'errors' => $e->errors()
-            ], 422); 
+            ], 422);
         }
-        
+
         // 2. Buat Pengguna Baru
         $user = User::create([
             'name' => $request->name,
@@ -71,6 +71,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Login successful',
+            'id' => $user->id,
             'access_token' => $token,
             'token_type' => 'Bearer',
         ]);

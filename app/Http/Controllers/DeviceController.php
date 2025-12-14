@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Device;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DeviceController extends Controller
 {
@@ -13,35 +14,64 @@ class DeviceController extends Controller
     {
         // Kalau mau filter per user:
         return Device::where('user_id', Auth::id())->get();
-
     }
 
     // POST /api/devices
     public function store(Request $request)
     {
+        // Validasi data
         $data = $request->validate([
-            'device_code' => 'required|string|unique:devices,device_code',
+            'user_id'     => 'required|integer',
+            'device_code' => 'required|string',
             'name'        => 'required|string',
-            'location'    => 'nullable|string',
             'device_type' => 'required|string',
         ]);
 
-        $data['user_id'] = Auth::id();
-        $data['is_claimed'] = true;
+        // Kolom tambahan
+        $data['is_claimed']   = true;
+        $data['last_seen_at'] = now();
+        $data['created_at']   = now();
+        $data['updated_at']   = now();
 
+        // Simpan ke tabel devices
         $device = Device::create($data);
+
+        // Jika device_type = "Monitoring Suhu", insert ke temperature_unit
+        if ($data['device_type'] === 'Monitoring Suhu') {
+            DB::table('temperature_unit')->insert([
+                'device_id'   => $device->id,
+                'room_status' => 'inactive', // default, bisa diubah admin
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+        }
 
         return response()->json($device, 201);
     }
 
-    // GET /api/devices/{device}
-    public function show(Device $device)
+    public function showByCode($device_code)
     {
-        $device->load(['settings', 'alerts' => function ($q) {
-            $q->latest('created_at')->limit(20);
-        }]);
+        $device = Device::where('device_code', $device_code)->first();
+        if (!$device) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Device tidak ditemukan'
+            ], 404);
+        }
 
-        return $device;
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'id'           => $device->id,
+                'device_code'  => $device->device_code,
+                'name'         => $device->name,
+                'device_type'  => $device->device_type,
+                'user_id'      => $device->user_id,
+                'is_active'    => $device->is_active,
+                'created_at'   => $device->created_at,
+                'updated_at'   => $device->updated_at
+            ]
+        ]);
     }
 
     // PUT/PATCH /api/devices/{device}

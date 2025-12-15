@@ -34,7 +34,16 @@ class DeviceController extends Controller
         $data['updated_at']   = now();
 
         // Simpan ke tabel devices
-        $device = Device::create($data);
+        $device = Device::firstOrCreate(
+            ['device_code' => $data['device_code']],
+            [
+                'user_id'      => $data['user_id'],
+                'name'         => $data['name'],
+                'device_type'  => $data['device_type'],
+                'is_claimed'   => true,
+                'last_seen_at' => now(),
+            ]
+        );
 
         // Jika device_type = "temperatur", insert ke temperature_unit
         if ($data['device_type'] === 'temperatur') {

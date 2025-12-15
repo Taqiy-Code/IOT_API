@@ -39,7 +39,7 @@ class DeviceController extends Controller
         // Jika device_type = "temperatur", insert ke temperature_unit
         if ($data['device_type'] === 'temperatur') {
             DB::table('temperature_unit')->insert([
-                'device_id'   => $device->id,
+                'temperature_unit_id'   => $device->id,
                 'room_status' => 'inactive', // default, bisa diubah admin
                 'created_at'  => now(),
                 'updated_at'  => now(),

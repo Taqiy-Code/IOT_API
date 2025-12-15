@@ -33,9 +33,7 @@ Route::post('password/reset', [PasswordResetController::class, 'resetPassword'])
 Route::post('logout', [AuthController::class, 'logout']);
 Route::get('user', [AuthController::class, 'user']); // Contoh rute terproteksi
 
-Route::apiResource('devices', DeviceController::class);
-
-
+// Route::apiResource('devices', DeviceController::class);
 
 Route::get('/devices/{device}/settings', [DeviceSettingController::class, 'show']);
 Route::put('/devices/{device}/settings', [DeviceSettingController::class, 'update']);

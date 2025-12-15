@@ -45,8 +45,13 @@ class DeviceController extends Controller
             ]
         );
 
-        // Jika device_type = "temperatur", insert ke temperature_unit
-        if ($data['device_type'] === 'temperatur') {
+        // 🔁 Update heartbeat
+        $device->update([
+            'last_seen_at' => now(),
+        ]);
+
+        // Jika device_type = "Monitoring Suhu", insert ke temperature_unit
+        if ($data['device_type'] === 'Monitoring Suhu') {
             DB::table('temperature_unit')->insert([
                 'temperature_unit_id'   => $device->id,
                 'room_status' => 'inactive', // default, bisa diubah admin
@@ -60,7 +65,6 @@ class DeviceController extends Controller
 
     public function showByCode($device_code)
     {
-        dd('hai');
         $device = Device::where('device_code', $device_code)->first();
         if (!$device) {
             return response()->json([
